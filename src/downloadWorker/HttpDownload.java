@@ -3,9 +3,11 @@ package downloadWorker;
 import java.io.IOException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+
+import staticVar.StaticVar;
 public class HttpDownload {
 	//private String srcFile;
-	private String ContentLength,ContentRange;
+	private String ContentLength;//,ContentRange;
 	private URL url=null;
 	private String srcUrl;
 	private HttpURLConnection httpUrl=null;
@@ -19,10 +21,11 @@ public class HttpDownload {
 		//System.out.println(this.savePath);
 		setFileName(srcFile);
 		this.savePath=savePath+getFileName();
+		//System.out.println("HttpDownload:"+this.savePath);
 		try {
 			url=new URL(srcFile);
 			httpUrl=(HttpURLConnection)url.openConnection();
-			
+			ContentLength=httpUrl.getHeaderField("Content-Length");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -33,12 +36,12 @@ public class HttpDownload {
 		return this.srcUrl;
 	}
 	
-	public String getContentRange() {
+	/*public String getContentRange() {
 		ContentRange=httpUrl.getHeaderField("Content-Range");
 		return ContentRange;
-	}
+	}*/
 	public String getContentLength() {
-		ContentLength=httpUrl.getHeaderField("Content-Length");
+		
 		return ContentLength;
 	}
 
@@ -47,6 +50,7 @@ public class HttpDownload {
 	}
 
 	public void setFileName(String srcFile) {
+		//
 		fileName=srcFile.substring(srcFile.lastIndexOf("/")+1, srcFile.length());
 		//System.out.println(fileName);
 	}
@@ -63,4 +67,10 @@ public class HttpDownload {
 		return savePath;
 	}
 	
+	public boolean isHttpUrlNull(){
+		if(null==httpUrl){
+			return true;
+		}
+		return false;
+	}
 }

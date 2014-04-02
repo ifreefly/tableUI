@@ -12,6 +12,7 @@ package configXml;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
@@ -19,6 +20,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import staticVar.StaticVar;
 import taskModel.FileInfo;
 import downloadWorker.HttpDownload;
 import downloadWorker.Piece;
@@ -65,6 +68,7 @@ public class Config {
 	
 	public void setReadBytes(long readBytes){
 		info.setAttribute("readBytes", String.valueOf(readBytes));
+		System.out.println("readBytes="+info.getAttribute("readBytes"));
 	}
 	
 	/*保存文件的断点信息，其中piecces中的piece是无序的，但新加入的piece在最后
@@ -118,6 +122,8 @@ public class Config {
 				pieces=new Piece[npieces.getLength()];
 				for(int i=0;i<npieces.getLength();i++){
 					Element nNode=(Element)npieces.item(i);
+					//System.out.println(nNode.getAttribute("start"));
+					pieces[i]=new Piece();
 					pieces[i].setBegPos(Integer.valueOf(nNode.getAttribute("start")));
 					pieces[i].setCurPos(Integer.valueOf(nNode.getAttribute("cur")));
 					pieces[i].setEndPos(Integer.valueOf(nNode.getAttribute("end")));
@@ -136,11 +142,17 @@ public class Config {
 		Node node=nodeList.item(0);
 		if(Node.ELEMENT_NODE==node.getNodeType()){
 			Element eNode=(Element)node;
-			httpDownload=new HttpDownload(eNode.getAttribute("fileUrl"),eNode.getAttribute("savePath"));
+			httpDownload=new HttpDownload(eNode.getAttribute("fileUrl"),
+					eNode.getAttribute("savePath").substring(0, eNode.getAttribute("savePath").lastIndexOf(StaticVar.SYSTEM_SEPARATOR))+StaticVar.SYSTEM_SEPARATOR);
 		}
 		
 		return httpDownload;
 	}
+	
+	public void writeToDisk(){
+		ConfigOpera.writeToDisk(document,configFile);
+	}
+	
 	public boolean deleteConfig(){//在文件下载完毕后删除配置文件
 		return this.configFile.delete();
 	}
@@ -148,4 +160,5 @@ public class Config {
 	public Element getRoot(){
 		return this.root;
 	}
+	
 }

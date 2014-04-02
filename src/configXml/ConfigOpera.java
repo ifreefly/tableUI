@@ -59,6 +59,7 @@ public class ConfigOpera {
 	protected static Document creatDocument(File configFile) throws ParserConfigurationException, SAXException, IOException{
 		DocumentBuilderFactory docuFactory=DocumentBuilderFactory.newInstance();
 		DocumentBuilder docuBuilder=docuFactory.newDocumentBuilder();
+		//System.out.println("hello");
 		return docuBuilder.parse(configFile);
 		
 	}

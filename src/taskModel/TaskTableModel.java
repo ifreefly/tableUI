@@ -16,7 +16,7 @@ public class TaskTableModel extends AbstractTableModel{
 	 */
 	private static final long serialVersionUID = 1L;
 	private List<FileInfo> rows;
-	private Map<DownloadWorker,FileInfo> mapLookUp;
+	private Map<FileInfo,DownloadWorker> mapLookUp;
 	private String titles[];
 	public TaskTableModel(){
 		titles=FileInfo.getTITILES();
@@ -79,8 +79,8 @@ public class TaskTableModel extends AbstractTableModel{
                 break;
         }
     }
-	public void addTask(DownloadWorker downloadWorker,FileInfo fileInfo){
-		mapLookUp.put(downloadWorker, fileInfo);
+	public void addTask(FileInfo fileInfo,DownloadWorker downloadWorker){
+		mapLookUp.put(fileInfo, downloadWorker);
 		rows.add(0, fileInfo);
 		fireTableRowsInserted(0,0);
 		//System.out.println(mapLookUp);
@@ -91,25 +91,33 @@ public class TaskTableModel extends AbstractTableModel{
 		mapLookUp.remove(row);
 		rows.remove(rowIndex);
 		fireTableRowsInserted(0,0);
-		System.out.println(rows);
-		System.out.println(mapLookUp);
+		//System.out.println(rows);
+		//System.out.println(mapLookUp);
 	}
 	
-	public void updateStatus(DownloadWorker downloadWorker,int progress){
+	public void updateStatus(FileInfo fileInfo,int progress){
 		//TODO
-		//System.out.println("wtf");
-		FileInfo fileInfo=mapLookUp.get(downloadWorker);
-		if(fileInfo!=null){
-			//System.out.println("wtf");
-			int rowIndex=rows.indexOf(fileInfo);
-			float p=(float)progress/100f;
-			setValueAt(p,rowIndex,4);
-			fireTableCellUpdated(rowIndex,4);
+		//System.out.println("wtf");	
+		int rowIndex=rows.indexOf(fileInfo);
+		float p=(float)progress/100f;
+		setValueAt(p,rowIndex,4);
+		fireTableCellUpdated(rowIndex,4);
+	}
+	
+	public void startTask(int rowIndex){
+		//TODO
+		FileInfo row=rows.get(rowIndex);
+		if(row!=null){
+			DownloadWorker downloadWorker=mapLookUp.get(row);
+			downloadWorker.startTask();
+		}
+	}
+	public void pauseTask(int rowIndex){
+		FileInfo row=rows.get(rowIndex);
+		if(row!=null){
+			DownloadWorker downloadWorker=mapLookUp.get(row);
+			downloadWorker.pauseTask();
 		}
 	}
 	
-	public void pauseTask(int rowIndex){
-		FileInfo row=rows.get(rowIndex);
-		//DownloadWorker downloadWorker=mapLookUp.
-	}
 }

@@ -31,19 +31,20 @@ public class ConfigTasks {
 	//private NodeList  nTasks=null;
 	public ConfigTasks(){
 		absolutePath=System.getProperty("java.class.path");
-		if(StaticVar.FILE_AVAILABLE==TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH)){
+		//System.out.println(TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH));
+		if(StaticVar.FILE_PARENT_NDIR!=TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH)){
 			configFile=new File(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH);
 			if(configFile.exists()){
+				
 				loadConfig();
 			}else{
 				createConfig();
+				writeToDisk();
 			}
 		}
-		//System.out.println(absolutePath);
 	}
 	
 	public void createConfig(){
-		
 		try {
 			configFile.createNewFile();
 			
@@ -54,13 +55,15 @@ public class ConfigTasks {
 		document=ConfigOpera.createDocument();
 		root=document.createElement("Tasks");
 		root.setAttribute("items", "0");
+		root.getAttribute("items");
 		document.appendChild(root);
+		
 	}
 	
 	public void loadConfig(){
 		try {
 			document=ConfigOpera.creatDocument(configFile);
-			root=(Element) document.getFirstChild();
+			root=(Element) document.getElementsByTagName("Tasks").item(0);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -81,7 +84,10 @@ public class ConfigTasks {
 			eTask.setAttribute("fileType", fileInfo.getFileType());
 			eTask.setAttribute("fileSatus", fileInfo.getFileStatus());
 			root.insertBefore(eTask, root.getFirstChild());
-			
+			int items=Integer.valueOf(root.getAttribute("items"));
+			items++;
+			root.setAttribute("items", String.valueOf(items));
+			writeToDisk();
 		//}
 	}
 	
@@ -108,17 +114,24 @@ public class ConfigTasks {
 	
 	public String[] loadTasks(){
 		String savePath[];
-		NodeList nTasks=root.getElementsByTagName("tasks");
+		NodeList nTasks=root.getElementsByTagName("task");
 		savePath=new String[nTasks.getLength()];
 		for(int i=0;i<nTasks.getLength();i++){
 			Element eTask=(Element)nTasks.item(i);
 			savePath[i]=new String(eTask.getAttribute("savePath"));
 		}
-		return null;
+		return savePath;
+	}
+	
+	public void writeToDisk(){
+		ConfigOpera.writeToDisk(document,configFile);
 	}
 	
 	public Element getRoot(){
 		return this.root;
 	}
-
+	
+	public void setItems(){
+		
+	}
 }

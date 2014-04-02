@@ -9,10 +9,8 @@ public class Piece {
 		this.curPos=curPos;
 		this.endPos=endPos;
 	}
-	public Piece(long begPos,long endPos){
-		this.begPos=begPos;
-		this.curPos=begPos;
-		this.endPos=endPos;
+	public Piece(){
+		
 	}
 	public long getEndPos() {
 		return endPos;

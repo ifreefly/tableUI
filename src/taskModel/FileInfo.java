@@ -12,7 +12,7 @@ public class FileInfo {
 	private String fileType;
 	private String fileName;
 	private String fileURL;
-	private float  progress;
+	private float  progress=0;
 	private String fileSize;
 	private String savePath;
 	public FileInfo(HttpDownload httpDownload){
@@ -24,6 +24,9 @@ public class FileInfo {
 		this.fileSize=httpDownload.getContentLength();
 		this.savePath=httpDownload.getSavePath();
 		this.progress=0;
+	}
+	public FileInfo(){
+		
 	}
 	public String getFileStatus() {
 		return fileStatus;
@@ -69,6 +72,9 @@ public class FileInfo {
 	}
 	public void setFileSize(String fileSize) {
 		this.fileSize = fileSize;
+	}
+	public void setSavePath(String savePath){
+		this.savePath=savePath;
 	}
 	public String getSavePath() {
 		return savePath;

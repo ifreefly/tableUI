@@ -10,6 +10,9 @@ import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 import staticVar.StaticVar;
 import tableCellRender.ProgressCellRenderer;
@@ -19,6 +22,7 @@ import taskModel.TaskTableModel;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 public class UpdateUI {
 	public static void main(String args[]){
 		new UpdateUI();
@@ -30,13 +34,22 @@ public class UpdateUI {
 			public void run() {
 				// TODO Auto-generated method stub
 				try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
                 	} 
 				catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
                 	}
 				final TaskManager taskManager=new TaskManager();
+				try {
+					taskManager.initConfigTasks();
+				} catch (ParserConfigurationException | SAXException
+						| IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
 				TaskTableModel model=taskManager.getTaskTableModel();
 				final JTable table=new JTable(model);
+				//taskManager.setParentComponent(table);
 				table.getColumn("progress").setCellRenderer(new ProgressCellRenderer());
 				JScrollPane scrollPane=new JScrollPane(table);
 				JToolBar toolBar=new JToolBar();
@@ -56,11 +69,51 @@ public class UpdateUI {
 		                		"please input urls",
 		                		JOptionPane.OK_CANCEL_OPTION);
 		                if(okclk==JOptionPane.OK_OPTION){
-		                	taskManager.addTask(table,textArea.getText());
+		                	try {
+		                		//taskManager.addTask(textArea.getText());
+								taskManager.addTask(table,textArea.getText());
+							} catch (ParserConfigurationException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							} catch (SAXException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 		                }
 		            }
 		        };
-		        Action puase=new AbstractAction("Pause Download"){
+		        Action start=new AbstractAction("start Download"){
+
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						// TODO Auto-generated method stub
+						int index=table.getSelectedRow();
+						if(index<0){
+							JOptionPane.showMessageDialog(
+									table, 
+									"Select a download to start",
+									"error",
+									JOptionPane.ERROR_MESSAGE);
+						}else{
+							taskManager.startTask(index);
+						}
+					}
+		        	
+		        };
+		        Action pause=new AbstractAction("Pause Download"){
+
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
@@ -102,6 +155,10 @@ public class UpdateUI {
 		        };
 		        
 		        toolBar.add(add);
+		        toolBar.addSeparator();
+		        toolBar.add(start);
+		        toolBar.addSeparator();
+		        toolBar.add(pause);
 		        toolBar.addSeparator();
 		        toolBar.add(delete);
 		        JFrame frame=new JFrame("FlashGot");

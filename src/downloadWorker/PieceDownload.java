@@ -44,10 +44,17 @@ public class PieceDownload extends Thread{
 			out.println();
 			*/
 			int c=0;
-			System.out.println("downloading");
-			System.out.println(downloadWorker.getHttpDownload().getSavePath());
+			//System.out.println("downloading");
+			//System.out.println(downloadWorker.getHttpDownload().getSavePath());
 			while((c=input.read(b,0,1024))>0){
-				piece.setCurPos(piece.getBegPos()+c);;
+			//while(piece.getCurPos()<piece.getEndPos()){
+				/*c=input.read(b,0,1024);
+				if(c==-1){//已经读到文件末尾，整个文件结束
+					break;
+				}*/
+				//System.out.println("downloading");
+				System.out.println("begPos="+piece.getBegPos()+"/curPos"+piece.getCurPos()+"/endPos"+piece.getEndPos());
+				piece.setCurPos(piece.getCurPos()+c);
 				if(piece.getCurPos()>=piece.getEndPos()){//该块已传输结束
 					int realWrite=c-(int)(piece.getCurPos()-piece.getEndPos());//读写修正
 					rfwrite.write(b, 0, realWrite);
@@ -56,17 +63,25 @@ public class PieceDownload extends Thread{
 					break;
 				}else{
 					rfwrite.write(b,0,c);
+					//piece.setCurPos();
 					downloadWorker.growBytes(c);
 				}
+				synchronized (this){
+					if(StaticVar.PAUSE_DOWNLOAD==downloadWorker.getDownloaddStatus()){
+						this.wait();
+					}
+				}
 			}
-			
 			//out.println("线程"+name+"结束字节是"+currentPos);
 			input.close();
 			rfwrite.close();
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 	
+	}
+	protected synchronized void toContinue(){
+		this.notifyAll();
 	}
 }
