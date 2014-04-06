@@ -7,6 +7,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+
 import javax.swing.SwingWorker;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -15,11 +16,12 @@ import org.xml.sax.SAXException;
 import configXml.Config;
 import staticVar.StaticVar;
 import taskModel.FileInfo;
-import taskModel.TaskTableModel;
+import taskModel.TaskManager;
+
 
 public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	private HttpDownload  httpDownload ;
-	private TaskTableModel taskTableModel;
+	private TaskManager taskManager;
 	private List<Piece> pieces=new ArrayList<Piece>();
 	private int maxThreads,freeThreads;
 	private long begPos=0,endPos=0;
@@ -30,19 +32,19 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	private FileInfo fileInfo;
 	private int downloadStatus=StaticVar.READY_DOWNLOAD;
 	private Config config;
-	public DownloadWorker(HttpDownload httpDownload,FileInfo fileInfo ,TaskTableModel taskTableModel){
+	public DownloadWorker(HttpDownload httpDownload,FileInfo fileInfo ,TaskManager taskManager){
 		maxThreads=StaticVar.DEFUALT_MAX_THREADS;
 		freeThreads=maxThreads;
 		this.httpDownload=httpDownload;
 		this.fileInfo=fileInfo;
-		this.taskTableModel=taskTableModel;
+		this.taskManager=taskManager;
 		addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals("progress")) {
                     //model.updateStatus(currentFile, (int) evt.getNewValue());
                 	System.out.println(evt.getNewValue());
-                    DownloadWorker.this.taskTableModel.updateStatus(DownloadWorker.this.fileInfo, (int) evt.getNewValue());
+                    DownloadWorker.this.taskManager.getTaskTableModel().updateStatus(DownloadWorker.this.fileInfo, (int) evt.getNewValue());
                 }
             }
         });
@@ -50,14 +52,14 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	
 	public void createConfig(){
 		//TODO
-		config=new Config(fileInfo.getSavePath()+".xml");
+		config=new Config(fileInfo.getSavePath()+fileInfo.getFileName()+".xml");
 		config.setFileInfo(fileInfo);
 		initPieces();
 	}
 	
 	public void loadConfig() throws ParserConfigurationException, SAXException, IOException{
 		//TODO
-		File configFile=new File(fileInfo.getSavePath()+".xml");
+		File configFile=new File(fileInfo.getSavePath()+fileInfo.getFileName()+".xml");
 		config=new Config(configFile);
 		loadPieces();
 	}
@@ -158,8 +160,10 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	@Override 
 	protected void done(){//善后，处理相关配置文件等
 		//TODO
-		//config.writeToDisk();
+		setProgress(100);
+		config.writeToDisk();
 		config.deleteConfig();
+		taskManager.addToHistory(fileInfo);
 		System.out.println("done");
 	}
 	

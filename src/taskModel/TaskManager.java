@@ -5,6 +5,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.xml.parsers.ParserConfigurationException;
 
+import mainUI.NewTaskDialog;
+
 import org.xml.sax.SAXException;
 
 import configXml.Config;
@@ -21,15 +23,16 @@ public class TaskManager {
 	private int availableDownload ;
 	private TaskTableModel taskTableModel;
 	private ConfigTasks configTasks;
+	private ConfigTasks historyTasks;
 	//private JTable parentComponent;
 	public TaskManager() {
 		availableDownload=StaticVar.CONCURRENCY_DOWNLOAD;
 		taskTableModel=new TaskTableModel();
-		
+		historyTasks=new ConfigTasks(StaticVar.CONFIG_HISTORY_TASK_PATH);
 	}
 	
 	public void initConfigTasks()throws ParserConfigurationException, SAXException, IOException{
-		configTasks=new ConfigTasks();
+		configTasks=new ConfigTasks(StaticVar.CONFIG_TASKALL_PATH);
 		System.out.println(configTasks.getRoot());
 		System.out.println(configTasks.getRoot().getAttribute("items"));
 		//System.out.println(configTasks.getRoot().getElementsByTagName("task").item(0));
@@ -46,18 +49,18 @@ public class TaskManager {
 		return this.taskTableModel;
 	}
 	
-	public void addTask(JTable parentComponent,String url) throws ParserConfigurationException, SAXException, IOException{
+	public void addTask(JTable parentComponent,NewTaskDialog newTaskDialog) throws ParserConfigurationException, SAXException, IOException{
 		//TODO to add one or more tasks
-		String urls[]=url.split(";");
+		String urls[]=newTaskDialog.getSrcField().getText().split(";");
 		if(new UrlFilter(urls).isValid()){
-			String filePath=StaticVar.DEV_SAVE_PATH+url.substring(url.lastIndexOf("/")+1, url.length());
+			String filePath=newTaskDialog.getSavePathField()+StaticVar.SYSTEM_SEPARATOR+urls[0].substring(urls[0].lastIndexOf("/")+1, urls[0].length());
 			int fileAvailable=fileAvailable(filePath);
 			for(int i=0;i<urls.length;i++){
 				//TODO如下语句可更改为switch/case语句，增强代码的可读性
 				if(StaticVar.FILE_AVAILABLE==fileAvailable){//初次新建任务
-					HttpDownload httpDownload=new HttpDownload(urls[i],StaticVar.DEV_SAVE_PATH);
+					HttpDownload httpDownload=new HttpDownload(urls[i],newTaskDialog.getNameField().getText(),newTaskDialog.getSavePathField().getText()+StaticVar.SYSTEM_SEPARATOR);
 					FileInfo fileInfo=new FileInfo(httpDownload);
-					DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this.taskTableModel);
+					DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
 					downloadWorker.createConfig();
 					taskTableModel.addTask(fileInfo, downloadWorker);
 					configTasks.addTask(fileInfo);
@@ -74,7 +77,7 @@ public class TaskManager {
 					Config config=new Config(configFile);
 					HttpDownload httpDownload=config.loadHttpDownload();
 					FileInfo fileInfo=new FileInfo(httpDownload);
-					DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this.taskTableModel);
+					DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
 					taskTableModel.addTask(fileInfo, downloadWorker);
 					//JOptionPane.showConfirmDialog(parentComponent, "ok");
 					if(availableDownload>0){
@@ -101,7 +104,7 @@ public class TaskManager {
 		Config config=new Config(configFile);
 		HttpDownload httpDownload=config.loadHttpDownload();
 		FileInfo fileInfo=new FileInfo(httpDownload);
-		DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this.taskTableModel);
+		DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
 		downloadWorker.loadConfig();
 		taskTableModel.addTask(fileInfo, downloadWorker);
 		
@@ -161,7 +164,42 @@ public class TaskManager {
 		}
 	}
 	
-	public class WriteConfig extends Thread {
+	public void addToHistory(FileInfo fileInfo){
+		configTasks.removeTask(fileInfo);
+		historyTasks.addTask(fileInfo);
+		this.availableDownload++;
+	}
+
+	public int getAvailableDownload() {
+		return availableDownload;
+	}
+
+	public void setAvailableDownload(int availableDownload) {
+		this.availableDownload = availableDownload;
+	}
+
+	public void setTaskTableModel(TaskTableModel taskTableModel) {
+		this.taskTableModel = taskTableModel;
+	}
+
+	public ConfigTasks getConfigTasks() {
+		return configTasks;
+	}
+
+	public void setConfigTasks(ConfigTasks configTasks) {
+		this.configTasks = configTasks;
+	}
+
+	public ConfigTasks getHistoryTasks() {
+		return historyTasks;
+	}
+
+	public void setHistoryTasks(ConfigTasks historyTasks) {
+		this.historyTasks = historyTasks;
+	}
+	
+	
+	/*public class WriteConfig extends Thread {
 		//TODO
 		//定时将配置文件写入硬盘
 		@Override
@@ -176,5 +214,5 @@ public class TaskManager {
 				}
 			}
 		}
-	}
+	}*/
 }

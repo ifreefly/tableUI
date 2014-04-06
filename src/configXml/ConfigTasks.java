@@ -29,11 +29,11 @@ public class ConfigTasks {
 	private Document document;
 	private Element root;
 	//private NodeList  nTasks=null;
-	public ConfigTasks(){
+	public ConfigTasks(String configType){
 		absolutePath=System.getProperty("java.class.path");
 		//System.out.println(TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH));
-		if(StaticVar.FILE_PARENT_NDIR!=TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH)){
-			configFile=new File(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH);
+		if(StaticVar.FILE_PARENT_NDIR!=TaskManager.fileAvailable(absolutePath+"/"+configType)){
+			configFile=new File(absolutePath+"/"+configType);
 			if(configFile.exists()){
 				
 				loadConfig();
@@ -55,7 +55,7 @@ public class ConfigTasks {
 		document=ConfigOpera.createDocument();
 		root=document.createElement("Tasks");
 		root.setAttribute("items", "0");
-		root.getAttribute("items");
+		//root.getAttribute("items");
 		document.appendChild(root);
 		
 	}
@@ -91,6 +91,20 @@ public class ConfigTasks {
 		//}
 	}
 	
+	public void removeTask(FileInfo fileInfo){//将任务从列表中删除
+		NodeList taskList=document.getElementsByTagName("task");
+		for(int i=0;i<taskList.getLength();i++){
+			Element eTask=(Element)taskList.item(i);
+			if(eTask.getAttribute("savePath").equals(fileInfo.getSavePath())){
+				eTask.getParentNode().removeChild(eTask);
+				int items=Integer.valueOf(root.getAttribute("items"));
+				items--;
+				root.setAttribute("items", String.valueOf(items));
+			}
+		}
+		writeToDisk();
+	}
+	
 	public void setFileStatus(){//设置下载状态，暂停？停止？
 		
 	}
@@ -118,7 +132,7 @@ public class ConfigTasks {
 		savePath=new String[nTasks.getLength()];
 		for(int i=0;i<nTasks.getLength();i++){
 			Element eTask=(Element)nTasks.item(i);
-			savePath[i]=new String(eTask.getAttribute("savePath"));
+			savePath[i]=new String(eTask.getAttribute("savePath")+eTask.getAttribute("fileName"));
 		}
 		return savePath;
 	}

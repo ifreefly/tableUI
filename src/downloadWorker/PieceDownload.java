@@ -30,7 +30,7 @@ public class PieceDownload extends Thread{
 		StaticVar.countProcess++;
 		try {
 			this.httpUrl=(HttpURLConnection)new URL(downloadWorker.getHttpDownload().getSrcUrl()).openConnection();
-			rfwrite =new RandomAccessFile(downloadWorker.getHttpDownload().getSavePath(),"rw");
+			rfwrite =new RandomAccessFile(downloadWorker.getHttpDownload().getSavePath()+downloadWorker.getHttpDownload().getFileName(),"rw");
 			httpUrl.setRequestProperty("User-Agent", "jmultidownload");//设置user-agent
 			String contentRange="bytes="+piece.getBegPos()+"-";//设置文件流开始位置
 			httpUrl.setRequestProperty("RANGE", contentRange);//设置文件流开始位置

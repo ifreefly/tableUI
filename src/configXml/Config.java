@@ -142,8 +142,8 @@ public class Config {
 		Node node=nodeList.item(0);
 		if(Node.ELEMENT_NODE==node.getNodeType()){
 			Element eNode=(Element)node;
-			httpDownload=new HttpDownload(eNode.getAttribute("fileUrl"),
-					eNode.getAttribute("savePath").substring(0, eNode.getAttribute("savePath").lastIndexOf(StaticVar.SYSTEM_SEPARATOR))+StaticVar.SYSTEM_SEPARATOR);
+			httpDownload=new HttpDownload(eNode.getAttribute("fileUrl"),eNode.getAttribute("fileName"),
+					eNode.getAttribute("savePath"));
 		}
 		
 		return httpDownload;

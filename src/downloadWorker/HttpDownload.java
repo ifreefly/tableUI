@@ -7,25 +7,28 @@ import java.net.HttpURLConnection;
 import staticVar.StaticVar;
 public class HttpDownload {
 	//private String srcFile;
-	private String ContentLength;//,ContentRange;
+	private String ContentLength="0";//,ContentRange;
 	private URL url=null;
 	private String srcUrl;
 	private HttpURLConnection httpUrl=null;
 	private String fileName=null;
 	private String fileType=null;
 	private String savePath=null;
-	public HttpDownload(String srcFile,String savePath){
+	public HttpDownload(String srcFile,String fileName,String savePath){
 		//this.srcFile=srcFile;
 		this.srcUrl=srcFile;
 		this.savePath=savePath;
 		//System.out.println(this.savePath);
-		setFileName(srcFile);
-		this.savePath=savePath+getFileName();
-		//System.out.println("HttpDownload:"+this.savePath);
+		this.fileName=fileName;
+		this.savePath=savePath;
+		System.out.println("HttpDownload:"+this.savePath);
 		try {
 			url=new URL(srcFile);
 			httpUrl=(HttpURLConnection)url.openConnection();
-			ContentLength=httpUrl.getHeaderField("Content-Length");
+			System.out.println(httpUrl.getHeaderField("Content-Length"));
+			if(httpUrl.getHeaderField("Content-Length")!=null){
+				ContentLength=httpUrl.getHeaderField("Content-Length");
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -47,12 +50,6 @@ public class HttpDownload {
 
 	public String getFileName() {
 		return fileName;
-	}
-
-	public void setFileName(String srcFile) {
-		//
-		fileName=srcFile.substring(srcFile.lastIndexOf("/")+1, srcFile.length());
-		//System.out.println(fileName);
 	}
 
 	public String getFileType() {

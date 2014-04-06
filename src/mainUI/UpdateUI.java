@@ -47,6 +47,7 @@ public class UpdateUI {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
+				final JFrame frame=new JFrame("FlashGot");
 				TaskTableModel model=taskManager.getTaskTableModel();
 				final JTable table=new JTable(model);
 				//taskManager.setParentComponent(table);
@@ -62,7 +63,7 @@ public class UpdateUI {
 
 					@Override
 		            public void actionPerformed(ActionEvent e) {
-						JTextArea textArea=new JTextArea(5,20);
+						/*JTextArea textArea=new JTextArea(5,20);
 		                int okclk=JOptionPane.showConfirmDialog(
 		                		table, 
 		                		textArea,
@@ -82,7 +83,25 @@ public class UpdateUI {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
-		                }
+		                }*/
+						NewTaskDialog newTaskDialog=new NewTaskDialog(frame,true);
+						int okclk=newTaskDialog.showDialog();
+						if(NewTaskDialog.OK_BUTTON==okclk){
+							try {
+		                		//taskManager.addTask(textArea.getText());
+								taskManager.addTask(table,newTaskDialog);
+							} catch (ParserConfigurationException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							} catch (SAXException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+						System.out.println(okclk);
 		            }
 		        };
 		        Action start=new AbstractAction("start Download"){
@@ -161,7 +180,7 @@ public class UpdateUI {
 		        toolBar.add(pause);
 		        toolBar.addSeparator();
 		        toolBar.add(delete);
-		        JFrame frame=new JFrame("FlashGot");
+		        
 		        // Ensures JVM closes after frame(s) closed and
                 // all non-daemon threads are finished
 				//frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
