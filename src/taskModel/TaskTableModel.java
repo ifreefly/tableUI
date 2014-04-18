@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.swing.table.AbstractTableModel;
 
+import staticVar.StaticVar;
 import downloadWorker.DownloadWorker;
 
 public class TaskTableModel extends AbstractTableModel{
@@ -117,6 +118,19 @@ public class TaskTableModel extends AbstractTableModel{
 		if(row!=null){
 			DownloadWorker downloadWorker=mapLookUp.get(row);
 			downloadWorker.pauseTask();
+		}
+	}
+	
+	public void exitOnClose(){
+		//TODO关闭软件时进行善后处理
+		//System.out.println("exitOnClose");
+		if(rows.size()>0){
+			for(FileInfo row:rows){
+				DownloadWorker downloadWorker=mapLookUp.get(row);
+				if(StaticVar.RUN_DOWNLOAD==downloadWorker.getDownloaddStatus()){
+					downloadWorker.pauseTask();
+				}
+			}
 		}
 	}
 	

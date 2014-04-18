@@ -3,11 +3,13 @@ package staticVar;
 public class StaticVar {
 	public static final int CONCURRENCY_DOWNLOAD=5;
 	public static final int DEFUALT_MAX_THREADS=2;
+	
 	public static final int READY_DOWNLOAD=0;
 	public static final int RUN_DOWNLOAD=1;
 	public static final int PAUSE_DOWNLOAD=2;
 	public static final int FINISH_DOWNLOAD=3;
 	public static final int DELETE_DOWNLOAD=4;
+	
 	public static final String DEV_SAVE_PATH="H:\\home\\workspace\\tableUI\\down\\";
 	public static int countProcess=0;
 	
@@ -26,4 +28,6 @@ public class StaticVar {
 	public static final int FILE_NAVAILABLE=3;
 	
 	public static final String SYSTEM_SEPARATOR=System.getProperty("file.separator");
+	public static final String ABSOLUTE_PATH=System.getProperty("java.class.path");
+	//public static final String ABSOLUTE_PATH=System.getProperty("user.dir");
 }

@@ -30,7 +30,7 @@ public class ConfigTasks {
 	private Element root;
 	//private NodeList  nTasks=null;
 	public ConfigTasks(String configType){
-		absolutePath=System.getProperty("java.class.path");
+		absolutePath=StaticVar.ABSOLUTE_PATH;
 		//System.out.println(TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH));
 		if(StaticVar.FILE_PARENT_NDIR!=TaskManager.fileAvailable(absolutePath+"/"+configType)){
 			configFile=new File(absolutePath+"/"+configType);
@@ -92,6 +92,11 @@ public class ConfigTasks {
 	}
 	
 	public void removeTask(FileInfo fileInfo){//将任务从列表中删除
+		//TODO need to be rewriten with getEtask
+		/*public void removeTask(String savePath){
+		 * eTasl.getParentNode().removeChild(getETask(savePath));
+		 * }
+		 * */
 		NodeList taskList=document.getElementsByTagName("task");
 		for(int i=0;i<taskList.getLength();i++){
 			Element eTask=(Element)taskList.item(i);
@@ -105,6 +110,17 @@ public class ConfigTasks {
 		writeToDisk();
 	}
 	
+	public Element getETask(String savePath){
+		//本方法的savePath=savePath+fileName
+		NodeList taskList=document.getElementsByTagName("task");
+		for(int i=0;i<taskList.getLength();i++){
+			Element eTask=(Element)taskList.item(i);
+			if(savePath.equals(eTask.getAttribute("savePath")+eTask.getAttribute("fileName"))){
+				return eTask;
+			}
+		}
+		return  null;
+	}
 	public void setFileStatus(){//设置下载状态，暂停？停止？
 		
 	}

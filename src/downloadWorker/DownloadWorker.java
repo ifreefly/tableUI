@@ -1,7 +1,6 @@
 package downloadWorker;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -61,6 +60,7 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 		//TODO
 		File configFile=new File(fileInfo.getSavePath()+fileInfo.getFileName()+".xml");
 		config=new Config(configFile);
+		downloadedBytes=config.getReadBytes();
 		loadPieces();
 	}
 	
@@ -81,8 +81,7 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 			}
 			Piece piece=new Piece(begPos,begPos,endPos);
 			begPos=endPos;
-			this.pieces.add(0, piece);
-			
+			this.pieces.add(0, piece);				
 			//publish(piece);
 		}
 		config.setPieces(this.pieces);
@@ -93,10 +92,11 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	
 
 	public void loadPieces(){//从配置文件导入pieces信息
-		this.pieces=Arrays.asList(config.loadPieces());
+		//this.pieces=Arrays.asList(config.loadPieces());
+		this.pieces=config.loadPieces();
 	}
 	@Override
-	protected List<Piece> doInBackground() {
+	protected List<Piece> doInBackground() throws InterruptedException {
 		// TODO Auto-generated method stub
 		fileSize=Long.valueOf(httpDownload.getContentLength());
 		System.out.println(pieces.toArray());
@@ -109,23 +109,24 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 		while(getDownloadedBytes()<fileSize){
 			int progress = (int) Math.round((getDownloadedBytes() * 100d/ fileSize) );
 			//System.out.println(getDownloadedBytes());
-			config.setReadBytes(getDownloadedBytes());
 			System.out.println("wtf");
+			config.setReadBytes(getDownloadedBytes());
+			config.setPieces(this.pieces);
+			config.writeToDisk();
+			setProgress(progress);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			config.setPieces(this.pieces);
-			config.writeToDisk();
-			setProgress(progress);
 		}
 		setProgress(100);
 		return pieces;
 	}
 	
 	protected void doProcess(){//process没有得到很好的执行故更改为doProcess来替代
+		//printPieces();
 		while(freeThreads>0){
 			System.out.println("process");
 			Piece piece=this.pieces.get(freeThreads-1);
@@ -160,34 +161,65 @@ public class DownloadWorker extends SwingWorker<List<Piece>,Piece>{
 	@Override 
 	protected void done(){//善后，处理相关配置文件等
 		//TODO
-		setProgress(100);
-		config.writeToDisk();
-		config.deleteConfig();
-		taskManager.addToHistory(fileInfo);
-		System.out.println("done");
+		if(getDownloadedBytes()==fileSize){
+			setProgress(100);
+			config.setPieces(this.pieces);
+			config.writeToDisk();
+			//config.writeToDisk();
+			//config.deleteConfig();
+			taskManager.addToHistory(fileInfo);
+			System.out.println("done");
+		}
 	}
 	
 	protected synchronized void growBytes(long downloadBytes){
-		this.downloadedBytes+=downloadBytes;
+		//synchronized(this.downloadedBytes){
+			this.downloadedBytes+=downloadBytes;
+		//}
 	}
 	private synchronized long getDownloadedBytes(){
 		return downloadedBytes;
+	}
+	public void setDownloadedBytes(long downloadBytes){
+		this.downloadedBytes=downloadBytes;
 	}
 	protected HttpDownload getHttpDownload(){
 		return httpDownload;
 	}
 	public void startTask(){
-		this.downloadStatus=StaticVar.RUN_DOWNLOAD;
-		for(PieceDownload pieceDownload : piecesDownloading){
-			pieceDownload.toContinue();
+		if(StaticVar.PAUSE_DOWNLOAD==this.downloadStatus){
+			this.downloadStatus=StaticVar.RUN_DOWNLOAD;
+			for(PieceDownload pieceDownload : piecesDownloading){
+				pieceDownload.toContinue();
+			}
 		}
-		
 	}
 	public void pauseTask(){
-		this.downloadStatus=StaticVar.PAUSE_DOWNLOAD;
+		//System.out.println("exit");
+		if(StaticVar.READY_DOWNLOAD==this.downloadStatus||StaticVar.RUN_DOWNLOAD==this.downloadStatus){
+			this.downloadStatus=StaticVar.PAUSE_DOWNLOAD;
+			config.writeToDisk();
+		}
 	}
+	
+	public void exitOnClose(){
+		pauseTask();
+		if(this.downloadedBytes==fileSize){
+			//保证文件下载完毕后确实执行了done()方法
+			done();
+		}
+	}
+	
 	public int getDownloaddStatus(){
 		return this.downloadStatus;
+	}
+
+	public void printPieces() {
+		for(Piece piece :pieces){
+			System.out.println("DonwloadWorker:Beg"+piece.getBegPos());
+			System.out.println("DonwloadWorker:Cur"+piece.getCurPos());
+			System.out.println("DonwloadWorker:End"+piece.getEndPos());
+		}
 	}
 	
 	

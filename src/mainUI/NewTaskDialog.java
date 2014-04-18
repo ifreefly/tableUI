@@ -18,7 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
+import taskModel.NewTask;
 import configXml.ConfigPath;
 
 
@@ -43,7 +43,8 @@ public class NewTaskDialog extends JDialog implements ActionListener{
 	private JButton okButton=new JButton("ok");
 	private JButton cancelButton=new JButton("cancel");
 	private JFileChooser chooser=new JFileChooser();
-	
+	private NewTask newTask;
+
 	public static int OK_BUTTON=1;
 	public static int CANCEL_BUTTON=2;
 	private int decision=0;
@@ -86,7 +87,7 @@ public class NewTaskDialog extends JDialog implements ActionListener{
 			
 			public void change(){
 				String url=srcField.getText();
-				if(url.length()>0){
+				if(url.length()>=0){
 					String fileName=url.substring(url.lastIndexOf("/")+1, url.length());
 					/*if(fileName.matches("*.*")){
 						nameField.setText(fileName);
@@ -131,11 +132,8 @@ public class NewTaskDialog extends JDialog implements ActionListener{
 		okButton.addActionListener(this);
 		cancelButton.addActionListener(this);
 		this.add(decisionPanel);
-		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
-		//System.out.println(this.getSize());
-		//System.out.println("height="+preferSize.height+"width="+preferSize.width);
-		
+		//chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		//srcField.setText(StaticVar.ABSOLUTE_PATH);
 	}
 	
 	
@@ -163,6 +161,7 @@ public class NewTaskDialog extends JDialog implements ActionListener{
 			setDecision(OK_BUTTON);
 			config.setPath(savePathField.getText());
 			config.writeToDisk();
+			newTask=new NewTask(srcField.getText(),nameField.getText(),savePathField.getText());
 			this.dispose();
 		}else{
 			setDecision(CANCEL_BUTTON);
@@ -190,5 +189,8 @@ public class NewTaskDialog extends JDialog implements ActionListener{
 		return savePathField;
 	}
 	
+	public NewTask getNewTask() {
+		return newTask;
+	}
 }
 

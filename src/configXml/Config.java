@@ -11,6 +11,7 @@ package configXml;
  * */
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,7 +22,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import staticVar.StaticVar;
+
+
 import taskModel.FileInfo;
 import downloadWorker.HttpDownload;
 import downloadWorker.Piece;
@@ -53,6 +55,7 @@ public class Config {
 		//TODO
 		this.configFile=configFile;
 		this.document=ConfigOpera.creatDocument(configFile);
+		this.info=(Element)document.getElementsByTagName("FileInfo").item(0);
 	}
 	
 	/* 设置文件信息到配置文件中，以便再次打开软件能够继续下载
@@ -64,6 +67,9 @@ public class Config {
 		info.setAttribute("fileSize", fileInfo.getFileSize());
 		info.setAttribute("fileType", fileInfo.getFileType());
 		info.setAttribute("fileUrl",  fileInfo.getFileURL());
+	}
+	public long getReadBytes(){
+		return Long.valueOf(info.getAttribute("readBytes"));
 	}
 	
 	public void setReadBytes(long readBytes){
@@ -111,7 +117,7 @@ public class Config {
 		 }
 	}
 	
-	public Piece[] loadPieces(){
+	/*public Piece[] loadPieces(){
 		Piece pieces[];
 		NodeList nodeList=document.getElementsByTagName("Pieces");
 		Node node=nodeList.item(0);
@@ -123,10 +129,12 @@ public class Config {
 				for(int i=0;i<npieces.getLength();i++){
 					Element nNode=(Element)npieces.item(i);
 					//System.out.println(nNode.getAttribute("start"));
-					pieces[i]=new Piece();
-					pieces[i].setBegPos(Integer.valueOf(nNode.getAttribute("start")));
-					pieces[i].setCurPos(Integer.valueOf(nNode.getAttribute("cur")));
-					pieces[i].setEndPos(Integer.valueOf(nNode.getAttribute("end")));
+					if(Long.valueOf(nNode.getAttribute("cur"))<Long.valueOf(nNode.getAttribute("end"))){
+						pieces[i]=new Piece();
+						pieces[i].setBegPos(Long.valueOf(nNode.getAttribute("start")));
+						pieces[i].setCurPos(Long.valueOf(nNode.getAttribute("cur")));
+						pieces[i].setEndPos(Long.valueOf(nNode.getAttribute("end")));
+					}
 				}
 				return pieces;
 			}else{
@@ -134,6 +142,33 @@ public class Config {
 			}
 		}
 		return null;
+	}*/
+	
+	public ArrayList<Piece> loadPieces(){
+		ArrayList<Piece> pieces=new ArrayList<Piece>();
+		NodeList nodeList=document.getElementsByTagName("Pieces");
+		Node node=nodeList.item(0);
+		if(Node.ELEMENT_NODE==node.getNodeType()){
+			Element eNode=(Element)node;
+			NodeList npieces=eNode.getElementsByTagName("Piece");
+			if(npieces.getLength()>0){
+				//pieces=new Piece[npieces.getLength()];
+				for(int i=0;i<npieces.getLength();i++){
+					Element nNode=(Element)npieces.item(i);
+					Piece piece=new Piece();
+					piece.setBegPos(Long.valueOf(nNode.getAttribute("start")));
+					piece.setCurPos(Long.valueOf(nNode.getAttribute("cur")));
+					piece.setEndPos(Long.valueOf(nNode.getAttribute("end")));
+					pieces.add(piece);
+				}
+				return pieces;
+			}else{
+				return null;
+			}
+		}
+		
+		return null;
+		
 	}
 	
 	public HttpDownload loadHttpDownload(){

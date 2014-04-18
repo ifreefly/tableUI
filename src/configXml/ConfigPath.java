@@ -22,7 +22,7 @@ public class ConfigPath {
 	//private NodeList  nTasks=null;
 	public ConfigPath(String configName){
 		//absolutePath=System.getProperty("java.class.path");
-		path=System.getProperty("java.class.path")+"/"+configName;
+		path=StaticVar.ABSOLUTE_PATH+"/"+configName;
 		//System.out.println(TaskManager.fileAvailable(absolutePath+"/"+StaticVar.CONFIG_TASKALL_PATH));
 		if(StaticVar.FILE_PARENT_NDIR!=TaskManager.fileAvailable(path)){
 			configFile=new File(path);

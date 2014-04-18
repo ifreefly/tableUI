@@ -6,7 +6,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -89,7 +88,7 @@ public class UpdateUI {
 						if(NewTaskDialog.OK_BUTTON==okclk){
 							try {
 		                		//taskManager.addTask(textArea.getText());
-								taskManager.addTask(table,newTaskDialog);
+								taskManager.addTask(table,newTaskDialog.getNewTask());
 							} catch (ParserConfigurationException e1) {
 								// TODO Auto-generated catch block
 								e1.printStackTrace();
@@ -184,7 +183,19 @@ public class UpdateUI {
 		        // Ensures JVM closes after frame(s) closed and
                 // all non-daemon threads are finished
 				//frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		        //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+		            @Override
+		            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+		                if (JOptionPane.showConfirmDialog(frame, 
+		                    "Are you sure to close this window?", "Really Closing?", 
+		                    JOptionPane.YES_NO_OPTION,
+		                    JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+		                	taskManager.exitOnCloes();
+		                    System.exit(0);
+		                }
+		            }
+		        } );
                 frame.setLayout(new BorderLayout());
                 frame.add(toolBar,BorderLayout.NORTH);
                 frame.add(scrollPane);

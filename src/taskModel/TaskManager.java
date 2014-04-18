@@ -4,9 +4,7 @@ package taskModel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.xml.parsers.ParserConfigurationException;
-
-import mainUI.NewTaskDialog;
-
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import configXml.Config;
@@ -49,28 +47,31 @@ public class TaskManager {
 		return this.taskTableModel;
 	}
 	
-	public void addTask(JTable parentComponent,NewTaskDialog newTaskDialog) throws ParserConfigurationException, SAXException, IOException{
+	public void addTask(JTable parentComponent,NewTask newTask) throws ParserConfigurationException, SAXException, IOException{
 		//TODO to add one or more tasks
-		String urls[]=newTaskDialog.getSrcField().getText().split(";");
+		String urls[]=newTask.getSrc().split(";");
 		if(new UrlFilter(urls).isValid()){
-			String filePath=newTaskDialog.getSavePathField()+StaticVar.SYSTEM_SEPARATOR+urls[0].substring(urls[0].lastIndexOf("/")+1, urls[0].length());
+			String filePath=newTask.getSavePath()+StaticVar.SYSTEM_SEPARATOR+urls[0].substring(urls[0].lastIndexOf("/")+1, urls[0].length());
 			int fileAvailable=fileAvailable(filePath);
 			for(int i=0;i<urls.length;i++){
 				//TODO如下语句可更改为switch/case语句，增强代码的可读性
 				if(StaticVar.FILE_AVAILABLE==fileAvailable){//初次新建任务
-					HttpDownload httpDownload=new HttpDownload(urls[i],newTaskDialog.getNameField().getText(),newTaskDialog.getSavePathField().getText()+StaticVar.SYSTEM_SEPARATOR);
+					addTask(newTask,true);
+					/*HttpDownload httpDownload=new HttpDownload(urls[i],newTask.getName(),newTask.getSavePath()+StaticVar.SYSTEM_SEPARATOR);
 					FileInfo fileInfo=new FileInfo(httpDownload);
 					DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
-					downloadWorker.createConfig();
 					taskTableModel.addTask(fileInfo, downloadWorker);
 					configTasks.addTask(fileInfo);
 					configTasks.writeToDisk();
-					//JOptionPane.showConfirmDialog(parentComponent, "ok");
-					if(availableDownload>0){
-						//System.out.println("初次新建任务");
-						availableDownload--;
-						downloadWorker.execute();
-					}
+					if(!fileInfo.getFileSize().equals("0")){
+						downloadWorker.createConfig();
+						//JOptionPane.showConfirmDialog(parentComponent, "ok");
+						if(availableDownload>0){
+							//System.out.println("初次新建任务");
+							availableDownload--;
+							downloadWorker.execute();
+						}
+					}*/
 				}else if(StaticVar.FILE_LOAD_CONFIG==fileAvailable){//文件曾创建过，导入配置文件进行下载,运行情况 很少！
 					//TODO
 					File configFile=new File(filePath+".xml"); 
@@ -99,19 +100,49 @@ public class TaskManager {
 		}
 	}
 	
-	public void addTaskByConfig(String configPath) throws ParserConfigurationException, SAXException, IOException{//从配置文件中导入任务
-		File configFile=new File(configPath); 
-		Config config=new Config(configFile);
-		HttpDownload httpDownload=config.loadHttpDownload();
+	public void addTask(NewTask newTask,boolean addFromNew){
+		HttpDownload httpDownload=new HttpDownload(newTask.getSrc(),newTask.getName(),newTask.getSavePath()+StaticVar.SYSTEM_SEPARATOR);
 		FileInfo fileInfo=new FileInfo(httpDownload);
 		DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
-		downloadWorker.loadConfig();
 		taskTableModel.addTask(fileInfo, downloadWorker);
-		
-		//JOptionPane.showConfirmDialog(parentComponent, "ok");
-		if(availableDownload>0){
-			availableDownload--;
-			downloadWorker.execute();
+		if(addFromNew){
+			configTasks.addTask(fileInfo);
+			configTasks.writeToDisk();
+		}
+		//有bug，需要修复，将如下代码提入上个if语句中
+		if(!fileInfo.getFileSize().equals("0")){
+			downloadWorker.createConfig();
+			//JOptionPane.showConfirmDialog(parentComponent, "ok");
+			if(availableDownload>0){
+				//System.out.println("初次新建任务");
+				availableDownload--;
+				downloadWorker.execute();
+			}
+		}
+	}
+	
+	
+	public void addTaskByConfig(String configPath) throws ParserConfigurationException, SAXException, IOException{//从配置文件中导入任务
+		File configFile=new File(configPath); 
+		if(configFile.exists()){
+			Config config=new Config(configFile);
+			HttpDownload httpDownload=config.loadHttpDownload();
+			FileInfo fileInfo=new FileInfo(httpDownload);
+			DownloadWorker downloadWorker=new DownloadWorker(httpDownload,fileInfo,this);
+			downloadWorker.loadConfig();
+			taskTableModel.addTask(fileInfo, downloadWorker);
+			//JOptionPane.showConfirmDialog(parentComponent, "ok");
+			if(availableDownload>0){
+				availableDownload--;
+				downloadWorker.execute();
+			}
+		}else{
+			Element eTask=configTasks.getETask(configPath.substring(0,configPath.lastIndexOf(".")));
+			String savePath=eTask.getAttribute("savePath");
+			savePath=savePath.substring(0, savePath.lastIndexOf(StaticVar.SYSTEM_SEPARATOR));
+			//System.out.println("TaskManager:savePath="+savePath);
+			NewTask newTask=new NewTask(eTask.getAttribute("fileUrl"),eTask.getAttribute("fileName"),savePath);
+			addTask(newTask,false);
 		}
 	}
 	public void removeTask(int rowIndex){
@@ -156,14 +187,20 @@ public class TaskManager {
 	private void loadTasks() throws ParserConfigurationException, SAXException, IOException{
 		//File configTasksFile=new File(System.getProperty("java.class.path")+"/"+StaticVar.CONFIG_TASKALL_PATH);
 		String savePath[]=configTasks.loadTasks();
+		
 		for(int i=0;i<savePath.length;i++){
 			//File configFile=new File(savePath[i].substring(0,savePath[i].lastIndexOf("."))+".xml");
 			System.out.println("loadTasks");
 			//System.out.println(savePath[i]+".xml");
 			addTaskByConfig(savePath[i]+".xml");
+			//System.out.println("TaskManager:savePath"+savePath[i]);
 		}
 	}
 	
+	public void exitOnCloes(){//关闭程序时软件进行善后处理
+		taskTableModel.exitOnClose();
+		configTasks.writeToDisk();
+	}
 	public void addToHistory(FileInfo fileInfo){
 		configTasks.removeTask(fileInfo);
 		historyTasks.addTask(fileInfo);
